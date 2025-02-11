@@ -151,6 +151,10 @@ create a file with the following line:
 DEVELOPMENT_TEAM = ID
 ```
 
+You can build the companion code from within XCode by choosing a simulator or hooking up your iPhone
+![Screenshot 2025-02-11 at 11 49 40 AM](https://github.com/user-attachments/assets/3a634be3-2358-4e1c-b9e7-b3e3d896fb63)
+
+
 where ID is the development team ID shown in the Apple Developer
 Portal. This ID is unique to your developer account (individual or
 organization).
