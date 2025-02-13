@@ -59,6 +59,7 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
   @IBOutlet weak var connectCode: UITextField?
   @IBOutlet weak var connectButton: UIButton?
   @IBOutlet weak var barcodeButton: UIButton?
+  @IBOutlet weak var troubleShootingButton: UIButton?
   @IBOutlet weak var legacyCheckbox: CheckBoxView!
   @objc var barcodeScanner: BarcodeScanner?
   @objc var phoneStatus: PhoneStatus!
@@ -167,6 +168,7 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
       connectCode = form.view.viewWithTag(3) as! UITextField?
       connectButton = form.view.viewWithTag(4) as! UIButton?
       barcodeButton = form.view.viewWithTag(5) as! UIButton?
+      troubleShootingButton = form.view.viewWithTag(18) as! UIButton?
       legacyCheckbox = form.view.viewWithTag(6) as? CheckBoxView
       legacyCheckbox.Text = "Use Legacy Connection"
       let ipaddr: String! = NetworkUtils.getIPAddress()
@@ -177,6 +179,14 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
       connectCode?.delegate = self
       connectButton?.addTarget(self, action: #selector(connect(_:)), for: UIControl.Event.primaryActionTriggered)
       barcodeButton?.addTarget(self, action: #selector(showBarcodeScanner(_:)), for: UIControl.Event.primaryActionTriggered)
+      if let button = form.view.viewWithTag(18) as? UIButton {
+          troubleShootingButton = button
+          button.isEnabled = true
+          button.isUserInteractionEnabled = true
+          button.addTarget(self, action: #selector(showTroubleshootingInfo(_:)), for: .touchUpInside)
+      } else {
+          NSLog("Failed to find troubleshooting button with tag 18")
+      }
       navigationBar.barTintColor = argbToColor(form.PrimaryColor)
       navigationBar.isTranslucent = false
       form.updateNavbar()
@@ -283,6 +293,26 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
     if let exception = form.interpreter.exception {
       NSLog("Exception: \(exception.name) (\(exception))")
     }
+  }
+  
+  @objc func showTroubleshootingInfo(_ sender: UIButton?) {
+      NSLog("showTroubleshootingInfo called")
+      
+      guard let notifier = notifier1 else {
+          NSLog("notifier1 is nil")
+          return
+      }
+      
+      NSLog("About to show alert")
+      notifier.ShowAlert("Troubleshooting Tips:\n\n" +
+                        "1. Have you opened appinventor.edu on your desktop or laptop and clicked Connect-> Ai Companion?\n" +
+                        "2. Verify both devices are on the same network\n" +
+                        "3. Go to iOS App Inventor App Settings and make sure Camera and Wifi are enabled for App Inventor\n" +
+                        "4. Try disabling/enabling WiFi\n" +
+                        "5. Restart the app")
+      versionNumber?.isHidden = false
+      ipAddrLabel?.isHidden = false
+      NSLog("troubleshooting complete")
   }
   
   @objc public class func gotText(_ text: String) {

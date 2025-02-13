@@ -282,6 +282,26 @@ $Source $Yail
 
 )
 
+;;; TroubleshootingButton
+
+(add-component PhonePanel com.google.appinventor.components.runtime.Button TroubleshootingButton
+(set-and-coerce-property! 'TroubleshootingButton 'BackgroundColor #xFFFFFF00 'number)
+
+(set-and-coerce-property! 'TroubleshootingButton 'FontSize 18 'number)
+
+(set-and-coerce-property! 'TroubleshootingButton 'TextColor #xFFFFFFFF 'number)
+
+)
+
+;;; Spacer
+
+(add-component PhonePanel com.google.appinventor.components.runtime.Label Spacer
+(set-and-coerce-property! 'Spacer 'HasMargins #f 'boolean)
+
+(set-and-coerce-property! 'Spacer 'Height 8 'number)
+
+)
+
 ;;; ScanButton
 
 (add-component PhonePanel com.google.appinventor.components.runtime.Button ScanButton 

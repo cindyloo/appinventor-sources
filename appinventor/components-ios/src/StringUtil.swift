@@ -172,7 +172,7 @@ import SchemeKit
     /// Replaces text using dictionary order
     @objc public static func replaceAllMappingsDictionary(
         _ text: String,
-        mappings: YailDictionary
+        _ mappings: YailDictionary
     ) -> String {
         return replaceAllMappings(text, mappings: mappings, order: mappingOrderDictionary)
     }
@@ -180,7 +180,7 @@ import SchemeKit
     /// Replaces text using longest string first order
     @objc public static func replaceAllMappingsLongestString(
         _ text: String,
-        mappings: YailDictionary
+        _ mappings: YailDictionary
     ) -> String {
         return replaceAllMappings(text, mappings: mappings, order: mappingOrderLongestStringFirst)
     }
@@ -188,7 +188,7 @@ import SchemeKit
     /// Replaces text using earliest occurrence order
     @objc public static func replaceAllMappingsEarliestOccurrence(
         _ text: String,
-        mappings: YailDictionary
+        _ mappings: YailDictionary
     ) -> String {
         return replaceAllMappings(text, mappings: mappings, order: mappingOrderEarliestOccurrence)
     }
