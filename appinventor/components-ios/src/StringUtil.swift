@@ -155,7 +155,16 @@ import SchemeKit
       return buffer.copy() as! String
   }
   
-
+  /**
+   * Reverses a `String`. Called from runtime.scm to reverse a UTF-8 string in a Unicode-aware way.
+   *
+   * - Parameter str: A `String` to reverse
+   *
+   * - Returns: A new `String` with the Unicode codepoints reversed.
+   */
+  @objc static func reverseString(_ string: String) -> String {
+    return String(string.reversed())
+  }
     
     /// Splits text into parts based on a separator
     public static func split(_ text: String, at: String) -> [String] {

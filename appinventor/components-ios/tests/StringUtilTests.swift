@@ -13,19 +13,18 @@ class StringUtilTests: XCTestCase {
                    StringUtil.joinStrings(["a", "b", "c"], NSString(string: ":").description as NSString))
   }
 
-  /*func testReverseString() throws {
-    XCTAssertEqual(["dlroW"],
-                   //try StringUtil.reverseString("World"))
-  }*/
+  func testReverseString() {
+    XCTAssertEqual("dlroW", StringUtil.reverseString("World"))
+  }
 
   func testReplaceMappingsWithLongestString()  {
-    XCTAssertEqual("peace for you and me and ourselves please",
-                   StringUtil.replaceAllMappingsLongestString("\"peace for me and you and yourselves please\"", ["you":"me", "me": "you","I": "you", "you": "I", "yourselves": "ourselves", "ourselves": "yourselves","myself": "yourself", "yourself": "myself", "mine": "yours", "ours": "yours", "yours": "mine" ]))// repl issue vs  "yours": "ours"]))
+    XCTAssertEqual("peace for you and I and ourselves please",StringUtil.replaceAllMappingsLongestString("peace for me and you and yourselves please", ["you":"me", "me": "you","I": "you", "you": "I", "yourselves": "ourselves", "ourselves": "yourselves","myself": "yourself", "yourself": "myself", "mine": "yours", "ours": "yours", "yours": "mine" ]))// repl issue vs  "yours": "ours"])
   }
 
   func testReplaceMappingsWithDictionary()  {
-    XCTAssertEqual("you me peace please",
-                   StringUtil.replaceAllMappingsLongestString("\"me you peace please\"", ["you":"me", "me": "you"]))
+    XCTAssertEqual("peace for you and I and Irselves please", StringUtil.replaceAllMappingsDictionary("peace for me and you and yourselves please", ["you":"me", "me": "you","I": "you", "you": "I", "yourselves": "ourselves", "ourselves": "yourselves","myself": "yourself", "yourself": "myself", "mine": "yours", "ours": "yours", "yours": "mine" ]))
+  
+
   }
 
   
