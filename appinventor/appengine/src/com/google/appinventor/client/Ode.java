@@ -1,13 +1,11 @@
 // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright 2009-2011 Google, All Rights reserved
-// Copyright 2011-2025 MIT, All rights reserved
+// Copyright 2011-2019 MIT, All rights reserved
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
 package com.google.appinventor.client;
 
-import static com.google.appinventor.client.utils.Promise.RejectCallback;
-import static com.google.appinventor.client.utils.Promise.ResolveCallback;
 import static com.google.appinventor.client.utils.Promise.reject;
 import static com.google.appinventor.client.utils.Promise.rejectWithReason;
 import static com.google.appinventor.client.utils.Promise.resolve;
@@ -22,19 +20,19 @@ import com.google.appinventor.client.boxes.ViewerBox;
 import com.google.appinventor.client.editor.EditorManager;
 import com.google.appinventor.client.editor.FileEditor;
 import com.google.appinventor.client.editor.ProjectEditor;
-import com.google.appinventor.client.editor.blocks.BlocklyPanel;
+import com.google.appinventor.client.editor.simple.SimpleVisibleComponentsPanel;
 import com.google.appinventor.client.editor.simple.palette.DropTargetProvider;
+import com.google.appinventor.client.editor.youngandroid.BlocklyPanel;
 import com.google.appinventor.client.editor.youngandroid.ConsolePanel;
 import com.google.appinventor.client.editor.youngandroid.DesignToolbar;
 import com.google.appinventor.client.editor.youngandroid.TutorialPanel;
 import com.google.appinventor.client.editor.youngandroid.YaFormEditor;
 import com.google.appinventor.client.editor.youngandroid.YaProjectEditor;
-import com.google.appinventor.client.editor.youngandroid.YaVisibleComponentsPanel;
 import com.google.appinventor.client.explorer.commands.ChainableCommand;
 import com.google.appinventor.client.explorer.commands.CommandRegistry;
 import com.google.appinventor.client.explorer.commands.SaveAllEditorsCommand;
-import com.google.appinventor.client.explorer.dialogs.NoProjectDialogBox;
 import com.google.appinventor.client.explorer.folder.FolderManager;
+import com.google.appinventor.client.explorer.dialogs.NoProjectDialogBox;
 import com.google.appinventor.client.explorer.project.Project;
 import com.google.appinventor.client.explorer.project.ProjectChangeAdapter;
 import com.google.appinventor.client.explorer.project.ProjectManager;
@@ -51,12 +49,16 @@ import com.google.appinventor.client.tracking.Tracking;
 import com.google.appinventor.client.utils.HTML5DragDrop;
 import com.google.appinventor.client.utils.PZAwarePositionCallback;
 import com.google.appinventor.client.utils.Promise;
+import com.google.appinventor.client.utils.Promise.RejectCallback;
+import com.google.appinventor.client.utils.Promise.ResolveCallback;
 import com.google.appinventor.client.utils.Urls;
 import com.google.appinventor.client.widgets.ExpiredServiceOverlay;
+
 import com.google.appinventor.client.widgets.TutorialPopup;
 import com.google.appinventor.client.widgets.boxes.WorkAreaPanel;
 import com.google.appinventor.client.wizards.NewProjectWizard.NewProjectCommand;
 import com.google.appinventor.client.wizards.TemplateUploadWizard;
+import com.google.appinventor.client.wizards.UISettingsWizard;
 import com.google.appinventor.common.version.AppInventorFeatures;
 import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.shared.rpc.RpcResult;
@@ -92,8 +94,8 @@ import com.google.gwt.event.dom.client.MouseWheelHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.Command;
@@ -297,11 +299,6 @@ public class Ode implements EntryPoint {
   private boolean secondBuildserver = false; // True if we have a second
                                              // buildserver.
 
-  /**
-   * Indicates whether we have an iOS build server available.
-   */
-  private boolean iosBuildServer = false;
-
   // The flags below are used by the Build menus. Because we have two
   // different buildservers, we have two sets of build menu items, one
   // for each buildserver.  The first time one is selected, we put up
@@ -474,7 +471,7 @@ public class Ode implements EntryPoint {
     propertiesBox.setVisible(true);
     if (currentFileEditor instanceof YaFormEditor) {
       YaFormEditor formEditor = (YaFormEditor) currentFileEditor;
-      YaVisibleComponentsPanel panel = formEditor.getVisibleComponentsPanel();
+      SimpleVisibleComponentsPanel panel = formEditor.getVisibleComponentsPanel();
       if (panel != null) {
         panel.showHiddenComponentsCheckbox();
       } else {
@@ -489,7 +486,7 @@ public class Ode implements EntryPoint {
     propertiesBox.setVisible(false);
     if (currentFileEditor instanceof YaFormEditor) {
       YaFormEditor formEditor = (YaFormEditor) currentFileEditor;
-      YaVisibleComponentsPanel panel = formEditor.getVisibleComponentsPanel();
+      SimpleVisibleComponentsPanel panel = formEditor.getVisibleComponentsPanel();
       if (panel != null) {
         panel.hideHiddenComponentsCheckbox();
       } else {
@@ -910,7 +907,6 @@ public class Ode implements EntryPoint {
 
     splashConfig = config.getSplashConfig();
     secondBuildserver = config.getSecondBuildserver();
-    iosBuildServer = config.getiOSBuildServer();
     // The code below is invoked if we do not have a second buildserver
     // configured. It sets the warnedBuild1 flag to true which inhibits
     // the display of the dialog box used when building. This means that
@@ -1690,9 +1686,7 @@ public class Ode implements EntryPoint {
         }
       });
     holder.add(ok);
-    if (splashConfig.version != -2) { // Don't show checkbox if splash is mandatory
-      holder.add(noshow);
-    }
+    holder.add(noshow);
     DialogBoxContents.add(message);
     DialogBoxContents.add(holder);
     dialogBox.setWidget(DialogBoxContents);
@@ -1748,11 +1742,6 @@ public class Ode implements EntryPoint {
     if (splashConfig.version == 0) {   // Never show splash if version is 0
       return false;             // Check first to avoid others unnecessary calls
     }
-
-    if (splashConfig.version == -2) {  // Always show splash if version is -2
-      return true;
-    }
-
     String value = userSettings.getSettings(SettingsConstants.SPLASH_SETTINGS).
       getPropertyValue(SettingsConstants.SPLASH_SETTINGS_VERSION);
     int uversion;
@@ -2550,15 +2539,6 @@ public class Ode implements EntryPoint {
 
   public boolean hasSecondBuildserver() {
     return secondBuildserver;
-  }
-
-  /**
-   * Checks whether the system has the iOS build server enabled.
-   *
-   * @return true if the server supports iOS builds
-   */
-  public boolean hasIosBuildServer() {
-    return iosBuildServer;
   }
 
   public boolean getWarnBuild(boolean secondBuildserver) {

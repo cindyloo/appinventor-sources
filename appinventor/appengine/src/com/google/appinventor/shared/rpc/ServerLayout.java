@@ -128,8 +128,6 @@ public class ServerLayout {
    */
   public static final String DOWNLOAD_USERFILE = "userfile";
 
-  public static final String DOWNLOAD_CSR = "certificate-request";
-
   /**
    * Relative path of the {@link com.google.appinventor.server.UploadServlet}
    * within the ODE GWT module.

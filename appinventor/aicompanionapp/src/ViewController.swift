@@ -210,7 +210,7 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
     guard let text = connectCode?.text else {
       return
     }
-    if (text.hasPrefix("\u{02}") && text.hasSuffix("\u{03}")) || text.hasPrefix("https:") {
+    if text.hasPrefix("https:") {
       ViewController.gotText(text)
       return
     }
@@ -250,18 +250,6 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
       "os": form.Platform,
       "aid": phoneStatus.InstallationId(),
       "r2": "true",
-      "extensions": """
-      [
-      \"edu.mit.appinventor.ble\",
-      \"com.bbc.microbit.profile\",
-      \"edu.mit.appinventor.ai.personalimageclassifier\",
-      \"edu.mit.appinventor.ai.personalaudioclassifier\",
-      \"edu.mit.appinventor.ai.posenet\",
-      \"edu.mit.appinventor.ai.facemesh\",
-      \"edu.mit.appinventor.ai.teachablemachine\",
-      \"fun.microblocks.microblocks\"
-      ]
-      """,
       "useproxy": phoneStatus.UseProxy ? "true" : "false"
     ].map({ (key: String, value: String) -> String in
       return "\(key)=\(value)"
@@ -269,7 +257,7 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
     NSLog("Values = \(values)")
     request.httpMethod = "POST"
     request.httpBody = values.data(using: String.Encoding.utf8)
-    let task = URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) in
+    URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) in
       if self.phoneStatus.WebRTC {
         guard let data = data, let responseContent = String(data: data, encoding: .utf8) else {
           return
@@ -291,9 +279,7 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
         self.setPopup(popup: responseContent)
       }
     }
-    )
-    task.priority = 1.0
-    task.resume()
+    ).resume()
   }
   
   @objc func showBarcodeScanner(_ sender: UIButton?) {
@@ -306,12 +292,7 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
   @objc public class func gotText(_ text: String) {
     ViewController.controller?.connectCode?.text = text
     if !text.isEmpty {
-      if let first = text.first, Character("a") <= first && first <= Character("z") {
-        ViewController.controller?.connect(nil)
-      } else if text.hasPrefix("\u{02}") && text.hasSuffix("\u{03}") {
-        let code = String(text[text.index(after: text.startIndex)..<text.index(before: text.endIndex)])
-        ViewController.controller?.openProject(named: code)
-      }
+      ViewController.controller?.connect(nil)
     }
   }
   
@@ -371,16 +352,6 @@ public class ViewController: UINavigationController, UITextFieldDelegate {
     let storyboard = UIStoryboard(name: "Main", bundle: nil)
     if let newRoot = storyboard.instantiateInitialViewController() {
       UIApplication.shared.delegate?.window??.rootViewController = newRoot
-    }
-  }
-
-  private func openProject(named name: String) {
-    if Bundle.main.path(forResource: "Screen1", ofType: "yail", inDirectory: "samples/\(name)/") != nil {
-      let newapp = BundledApp(named: name, at: "samples/\(name)/")
-      newapp.makeCurrent()
-      newapp.loadScreen1(form)
-    } else {
-      view.makeToast("Unable to locate project \(name)")
     }
   }
 

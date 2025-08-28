@@ -159,7 +159,6 @@ public class ShowProgressBarCommand extends ChainableCommand {
         minPB.showDismissButton();
         labelContent = MESSAGES.unableToCompile(result.getOutput());
         success = false;
-        minPB.center();
       }
     }
     minPB.setProgress(currentProgress, labelContent);

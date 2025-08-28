@@ -8,8 +8,6 @@ package com.google.appinventor.server;
 
 import com.google.appinventor.common.utils.StringUtils;
 
-import com.google.appinventor.server.ios.CertificateRequestGenerator;
-
 import com.google.appinventor.server.storage.StorageIo;
 import com.google.appinventor.server.storage.StorageIoInstanceHolder;
 
@@ -22,7 +20,11 @@ import com.google.appinventor.shared.rpc.project.RawFile;
 
 import com.google.appinventor.shared.storage.StorageUtil;
 
+import java.io.File;
 import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -208,9 +210,7 @@ public class DownloadServlet extends OdeServlet {
         String[] projectIdStrings = uriComponents[PROJECT_ID_INDEX].split("-");
         List<Long> projectIds = new ArrayList<Long>();
         for (String projectId : projectIdStrings) {
-          long pid = Long.parseLong(projectId);
-          StorageIoInstanceHolder.getInstance().assertUserHasProject(userId, pid);
-          projectIds.add(pid);
+          projectIds.add(Long.valueOf(projectId));
         }
         ProjectSourceZip zipFile = fileExporter.exportSelectedProjectsSourceZip(
           userId, "selected-projects.zip", projectIds);
@@ -265,14 +265,6 @@ public class DownloadServlet extends OdeServlet {
           projectId, false, false, zipName, includeYail,
           false, false, false, false, true);
         downloadableFile = zipFile.getRawFile();
-      } else if (downloadKind.equals(ServerLayout.DOWNLOAD_CSR)) {
-        byte[] csr = getCSR();
-        if (csr == null) {
-          resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-          return;
-        } else {
-          downloadableFile = new RawFile("AppInventor.certSigningRequest", csr);
-        }
       } else {
         throw new IllegalArgumentException("Unknown download kind: " + downloadKind);
       }
@@ -324,13 +316,5 @@ public class DownloadServlet extends OdeServlet {
       formatter.format("%02x", b);
     }
     return formatter.toString();
-  }
-
-  private byte[] getCSR() {
-    try {
-      return CertificateRequestGenerator.generateCertificateRequest(userInfoProvider.getUser());
-    } catch (IOException e) {
-      return null;
-    }
   }
 }

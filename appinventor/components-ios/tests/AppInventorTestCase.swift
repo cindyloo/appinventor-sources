@@ -82,7 +82,6 @@ class AppInventorTestCase: XCTestCase {
     do {
       interpreter = try getInterpreterForTesting()
       form = TestForm(interpreter)
-      form.makeActive()
       form.Initialize()
     } catch {
       XCTFail()

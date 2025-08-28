@@ -63,7 +63,7 @@ public class Resources {
     synchronized (RESOURCES) {
       try {
         File file = RESOURCES.get(resourcePath);
-        if (file == null || !file.exists()) {
+        if (file == null) {
           String basename = PathUtil.basename(resourcePath);
           StringBuilder prefix;
           String suffix;

@@ -12,11 +12,7 @@ import SchemeKit
   fileprivate var _assetsLoaded = false
   fileprivate var _isScreenClosed = false
   private static var _webRtcManager: WebRTCNativeManager? = nil
-
-  public convenience init() {
-    self.init(nibName: nil, bundle: nil)
-  }
-
+  
   public override init(nibName nibNameOrNil: String?, bundle bundleOrNil: Bundle?) {
     super.init(nibName: nibNameOrNil, bundle: bundleOrNil)
     if ReplForm.topform == nil {
@@ -31,8 +27,8 @@ import SchemeKit
     }
   }
 
-  public init(application: Application) {
-    super.init(application: application, screen: "Screen1")
+  public override init(application: Application) {
+    super.init(application: application)
     if ReplForm.topform == nil {
       makeTopForm()
     }
@@ -41,16 +37,6 @@ import SchemeKit
   open func makeTopForm() {
     ReplForm.topform = self
     formName = "Screen1"
-  }
-
-  @objc open override func clear() {
-    super.clear()
-    SCMInterpreter.shared.runGC()
-  }
-
-  override func defaultPropertyValues() {
-    super.defaultPropertyValues()
-    ScreenOrientation = "unspecified"
   }
 
   open func processException(ex: NSException) {
@@ -197,7 +183,7 @@ import SchemeKit
     ReplForm._webRtcManager = nil
   }
 
-  override open func doCloseScreen(withValue value: AnyObject? = nil) {
+  override func doCloseScreen(withValue value: AnyObject? = nil) {
     super.doCloseScreen(withValue: value)
     _isScreenClosed = true
     do {
@@ -207,7 +193,7 @@ import SchemeKit
     }
   }
 
-  override open func doCloseScreen(withPlainText text: String) {
+  override func doCloseScreen(withPlainText text: String) {
     super.doCloseScreen(withPlainText: text)
     _isScreenClosed = true
     Application.current?.popScreen(with: text)

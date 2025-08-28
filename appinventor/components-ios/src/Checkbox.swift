@@ -59,17 +59,12 @@ func loadCheckBox(completion: @escaping (SVGLayer, SVGLayer) -> Void) {
   }
 }
 
-protocol CheckBoxViewDelegate: NSObject {
-  func checkboxDidChangeState(_ view: CheckBoxView)
-}
-
 /**
  * CheckBoxView is a custom UIView to handle the logic of the CheckBox. It is
  * responsible for updating the state of the button and its appearance as a
  * function of user or block interaction with the component.
  */
 public class CheckBoxView: UIView {
-  unowned var delegate: CheckBoxViewDelegate?
   fileprivate var _button = UIButton(frame: .zero)
   fileprivate var _text = UILabel()
   fileprivate var _checked: CAShapeLayer!
@@ -214,12 +209,11 @@ public class CheckBoxView: UIView {
   @objc private func changeSwitch() {
     if Enabled {
       Checked = !Checked
-      delegate?.checkboxDidChangeState(self)
     }
   }
 }
 
-public class CheckBox: ViewComponent, AbstractMethodsForViewComponent, AccessibleComponent, CheckBoxViewDelegate {
+public class CheckBox: ViewComponent, AbstractMethodsForViewComponent, AccessibleComponent {
   public var HighContrast: Bool = false
   fileprivate var _view = CheckBoxView()
   fileprivate var _backgroundColor = Int32(bitPattern: Color.default.rawValue)
@@ -233,7 +227,8 @@ public class CheckBox: ViewComponent, AbstractMethodsForViewComponent, Accessibl
   public override init(_ parent: ComponentContainer) {
     super.init(parent)
     super.setDelegate(self)
-    _view.delegate = self
+    _view._button.addTarget(self, action: #selector(changeSwitch), for: .touchUpInside)
+    _view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(changeSwitch)))
     _view._text.textColor = preferredTextColor(parent.form)
     parent.add(self)
     Checked = false
@@ -375,13 +370,5 @@ public class CheckBox: ViewComponent, AbstractMethodsForViewComponent, Accessibl
   
   @objc open func LostFocus() {
     EventDispatcher.dispatchEvent(of: self, called: "LostFocus")
-  }
-
-  // MARK: CheckBoxViewDelegate implementation
-
-  func checkboxDidChangeState(_ view: CheckBoxView) {
-    if _view.Enabled {
-      Changed()
-    }
   }
 }

@@ -119,7 +119,6 @@ public class ServiceAccountTokenProvider : TokenProvider {
         callback(nil, error)
       }
     }
-    task.priority = 1.0
     task.resume()
   }
 }

@@ -13,7 +13,6 @@ import static com.google.appinventor.common.constants.YoungAndroidStructureConst
 import static com.google.appinventor.common.constants.YoungAndroidStructureConstants.PROJECT_DIRECTORY;
 import static com.google.appinventor.common.constants.YoungAndroidStructureConstants.SRC_FOLDER;
 import static com.google.appinventor.common.constants.YoungAndroidStructureConstants.YAIL_FILE_EXTENSION;
-import static com.google.appinventor.server.ios.ProvisioningProfileUtil.validateProvisioningProfile;
 
 import com.google.appengine.api.utils.SystemProperty;
 import com.google.apphosting.api.ApiProxy;
@@ -30,7 +29,6 @@ import com.google.appinventor.server.GalleryExtensionException;
 import com.google.appinventor.server.Server;
 import com.google.appinventor.server.encryption.EncryptionException;
 import com.google.appinventor.server.flags.Flag;
-import com.google.appinventor.server.ios.ProvisioningProfileValidationResult;
 import com.google.appinventor.server.project.CommonProjectService;
 import com.google.appinventor.server.project.utils.Security;
 import com.google.appinventor.server.properties.json.ServerJsonParser;
@@ -84,7 +82,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -120,16 +117,10 @@ public final class YoungAndroidProjectService extends CommonProjectService {
   // host[:port] to use for connecting to the build server
   private static final Flag<String> buildServerHost =
       Flag.createFlag("build.server.host", "localhost:9990");
-  private static final Flag<String> buildServerPassword =
-      Flag.createFlag("build.server.password", "");
   // host[:port] to use for connecting to the second build server
   private static final Flag<String> buildServerHost2 =
       Flag.createFlag("build2.server.host", "");
-  private static final Flag<String> buildServerPassword2 =
-      Flag.createFlag("build2.server.password", "");
   // host[:port] to tell build server app host url
-  private static final Flag<String> iosBuildServer =
-      Flag.createFlag("ios.build.server.host", "");
   private static final Flag<String> appengineHost =
       Flag.createFlag("appengine.host", "");
   private static final boolean DEBUG = Flag.createFlag("appinventor.debugging", false).get();
@@ -501,35 +492,15 @@ public final class YoungAndroidProjectService extends CommonProjectService {
    * @param projectId  project id to be built
    * @param nonce random string used to find resulting APK from unauth context
    * @param target  build target (optional, implementation dependent)
-   * @param foriOS true if the app should be built for iOS
-   * @param forAppStore true if the app should be built for App Store distribution
+   *
    * @return an RpcResult reflecting the call to the Build Server
    */
   @Override
   public RpcResult build(User user, long projectId, String nonce, String target,
-      boolean secondBuildserver, boolean isAab, boolean foriOS, boolean forAppStore) {
+      boolean secondBuildserver, boolean isAab) {
     String userId = user.getUserId();
     String projectName = storageIo.getProjectName(userId, projectId);
     String outputFileDir = BUILD_FOLDER + '/' + target;
-    if (foriOS) {
-      ProvisioningProfileValidationResult result = validateProvisioningProfile(userId, projectId, forAppStore);
-      if (result != ProvisioningProfileValidationResult.SUCCESS) {
-        switch (result) {
-          case NO_ADHOC_PROFILE:
-            return new RpcResult(false, "", "Ad-hoc provisioning profile is required for an ad-hoc iOS build.");
-          case NO_APPSTORE_PROFILE:
-            return new RpcResult(false, "", "App Store provisioning profile is required for an App Store iOS build.");
-          case EXPIRED_CERTIFICATE:
-            return new RpcResult(false, "", "Provisioning profile certificate has expired.");
-          case EXPIRED_PROFILE:
-            return new RpcResult(false, "", "Provisioning profile has expired.");
-          case MISSING_CERTIFICATE:
-            return new RpcResult(false, "", "Provisioning profile is missing certificate.");
-          default:
-            break;
-        }
-      }
-    }
 
     // Store the userId and projectId based on the nonce
 
@@ -550,9 +521,8 @@ public final class YoungAndroidProjectService extends CommonProjectService {
           projectId,
           secondBuildserver,
           outputFileDir,
-          isAab, foriOS, forAppStore));
+          isAab));
       HttpURLConnection connection = (HttpURLConnection) buildServerUrl.openConnection();
-      setBuildServerPassword(connection, secondBuildserver);
       connection.setDoOutput(true);
       connection.setRequestMethod("POST");
 
@@ -560,7 +530,7 @@ public final class YoungAndroidProjectService extends CommonProjectService {
       FileExporter fileExporter = new FileExporterImpl();
       zipFile = fileExporter.exportProjectSourceZip(userId, projectId, false,
           /* includeAndroidKeystore */ true,
-        projectName + ".aia", true, false, true, false, forAppStore, false);
+        projectName + ".aia", true, false, true, false, false, false);
       // The code below tests the size of the compressed project before
       // we send it off to the buildserver. When using URLFetch we know that
       // this size is limited to 10MB based on Google's documentation.
@@ -801,42 +771,22 @@ public final class YoungAndroidProjectService extends CommonProjectService {
   // a little more complicated when we want to get the URL from an App Engine config file or
   // command line argument.
   private String getBuildServerUrlStr(String userName, String userId,
-      long projectId, boolean secondBuildserver, String fileName, boolean isAab,
-      boolean foriOS, boolean forAppStore)
+    long projectId, boolean secondBuildserver, String fileName, boolean isAab)
       throws EncryptionException {
-    if (forAppStore && !foriOS) {
-      throw new IllegalArgumentException("App Store build is only for iOS");
-    }
-    String host = foriOS ? iosBuildServer.get() :
-        secondBuildserver ? buildServerHost2.get() : buildServerHost.get();
     UriBuilder uriBuilder = new UriBuilder(
-        "http://" + host + "/buildserver/build-all-from-zip-async"
-    )
+        "http://"
+            + (secondBuildserver ? buildServerHost2.get() : buildServerHost.get())
+            + "/buildserver/build-all-from-zip-async")
         .add("uname", userName)
         .add("callback", "http://" + getCurrentHost() + ServerLayout.ODE_BASEURL_NOAUTH +
             ServerLayout.RECEIVE_BUILD_SERVLET + "/" +
             Security.encryptUserAndProjectId(userId, projectId) + "/" +
             fileName)
-        .add("ext", forAppStore ? "asc" : foriOS ? "ipa" :
-            isAab ? "aab" : "apk");
+        .add("ext", isAab ? "aab" : "apk");
     if (sendGitVersion.get()) {
       uriBuilder.add("gitBuildVersion", GitBuildId.getVersion());
     }
     return uriBuilder.build();
-  }
-
-  private void setBuildServerPassword(HttpURLConnection connection, boolean secondBuildserver) {
-    final String buildServerPassword = secondBuildserver
-            ? YoungAndroidProjectService.buildServerPassword2.get()
-            : YoungAndroidProjectService.buildServerPassword.get();
-
-    if (Objects.isNull(buildServerPassword) || buildServerPassword.isEmpty()) {
-      // No need to set a password, as the build server is not password protected.
-      return;
-    }
-
-    // Set the password as Password token...
-    connection.setRequestProperty("Authorization", "Password " + buildServerPassword);
   }
 
   private String getCurrentHost() {

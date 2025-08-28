@@ -353,7 +353,7 @@ struct WebRTCMessage: Codable {
       do {
         var request = try URLRequest(url: "https://\(rendezvousServer2)/rendezvous2/", method: .post)
         request.httpBody = try JSONSerialization.data(withJSONObject: dataCopy)
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { data, response, error in
           // pass
           if let data = data {
             print("sendRendezvous response: \(data)")
@@ -361,9 +361,7 @@ struct WebRTCMessage: Codable {
           } else if let error = error {
             print("sendRendezvous error: \(error)")
           }
-        }
-        task.priority = 1.0
-        task.resume()
+        }.resume()
       } catch {
         print("sendRendezvous error: \(error)")
       }

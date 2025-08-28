@@ -58,8 +58,7 @@ public enum PropertyCategory {
 
   THEMING("Theming"),
 
-  PUBLISHING("Publishing"),
-  IOS("iOS Settings");
+  PUBLISHING("Publishing");
 
   private final String name;
 

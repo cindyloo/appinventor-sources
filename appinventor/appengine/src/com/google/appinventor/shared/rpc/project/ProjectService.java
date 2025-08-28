@@ -10,6 +10,8 @@ import com.google.appinventor.shared.rpc.BlocksTruncatedException;
 import com.google.appinventor.shared.rpc.InvalidSessionException;
 import com.google.appinventor.shared.rpc.RpcResult;
 import com.google.appinventor.shared.rpc.ServerLayout;
+import com.google.appinventor.shared.rpc.project.ChecksumedLoadFile;
+import com.google.appinventor.shared.rpc.project.ChecksumedFileException;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
@@ -326,11 +328,9 @@ public interface ProjectService extends RemoteService {
    * @param target  build target (optional, implementation dependent)
    * @param secondBuildserver whether to use the second buildserver
    *
-   * @param foriOS
-   * @param forAppStore
    * @return  results of invoking the build command
    */
-  RpcResult build(long projectId, String nonce, String target, boolean secondBuildserver, boolean isAab, boolean foriOS, boolean forAppStore);
+  RpcResult build(long projectId, String nonce, String target, boolean secondBuildserver, boolean isAab);
 
   /**
    * Gets the result of a build command for the project from the back-end.
